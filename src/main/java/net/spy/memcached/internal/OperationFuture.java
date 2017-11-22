@@ -23,6 +23,8 @@
 
 package net.spy.memcached.internal;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.TimeoutListener;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.ops.OperationStatus;
@@ -61,6 +64,7 @@ public class OperationFuture<T>
   private final long timeout;
   private Operation op;
   private final String key;
+  private List<TimeoutListener> timeoutListeners;
   private Long cas;
 
   /**
@@ -97,6 +101,11 @@ public class OperationFuture<T>
     timeout = opTimeout;
     key = k;
     cas = null;
+  }
+
+  @Override
+  public void setTimeoutListeners(List<TimeoutListener> timeoutListeners) {
+    this.timeoutListeners = timeoutListeners;
   }
 
   /**
@@ -164,8 +173,14 @@ public class OperationFuture<T>
       if (op != null) { // op can be null on a flush
         op.timeOut();
       }
-      throw new CheckedOperationTimeoutException(
-          "Timed out waiting for operation", op);
+      for (TimeoutListener listener : timeoutListeners) {
+        try {
+          listener.onTimeout(this);
+        } catch (Exception e) {
+          getLogger().error("Error execute timeout listeners", e);
+        }
+      }
+      throw new CheckedOperationTimeoutException("Timed out waiting for operation", op);
     } else {
       // continuous timeout counter will be reset
       MemcachedConnection.opSucceeded(op);

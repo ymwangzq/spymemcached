@@ -159,6 +159,8 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
 
   protected final ExecutorService executorService;
 
+  private final List<TimeoutListener> timeoutListeners = new ArrayList<TimeoutListener>();
+
   /**
    * Get a memcache client operating on the specified memcached locations.
    *
@@ -323,6 +325,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
               rv.signalComplete();
             }
           });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -352,6 +355,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
             rv.signalComplete();
           }
         });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -404,6 +408,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -649,6 +654,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
               rv.signalComplete();
             }
           });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1040,6 +1046,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1099,6 +1106,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1358,6 +1366,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       ops.add(op);
     }
     assert mops.size() == chunks.size();
+    rv.setTimeoutListeners(timeoutListeners);
     mconn.checkState();
     mconn.addOperations(mops);
     return rv;
@@ -1530,6 +1539,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
                     tc.getMaxSize())));
           }
         });
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -2001,6 +2011,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
             rv.signalComplete();
           }
         });
+    rv.setTimeoutListeners(timeoutListeners);
     mconn.enqueueOperation(key, op);
     rv.setOperation(op);
     return rv;
@@ -2335,6 +2346,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       op = opFact.delete(key, cas, callback);
     }
 
+    rv.setTimeoutListeners(timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -2579,6 +2591,14 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       }
     }
     return rv;
+  }
+
+  public MemcachedClient addTimeoutListener(TimeoutListener listener) {
+    if (listener == null) {
+      throw new NullPointerException();
+    }
+    timeoutListeners.add(listener);
+    return this;
   }
 
   /**

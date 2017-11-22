@@ -24,6 +24,7 @@
 
 package net.spy.memcached.internal;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import net.spy.memcached.TimeoutListener;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 
@@ -109,4 +111,7 @@ public class GetFuture<T>
     notifyListeners();
   }
 
+  public void setTimeoutListeners(List<TimeoutListener> timeoutListeners) {
+    rv.setTimeoutListeners(timeoutListeners);
+  }
 }

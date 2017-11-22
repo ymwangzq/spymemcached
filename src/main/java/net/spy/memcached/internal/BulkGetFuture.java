@@ -26,6 +26,7 @@ package net.spy.memcached.internal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.TimeoutListener;
 import net.spy.memcached.compat.log.LoggerFactory;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
@@ -59,6 +61,7 @@ public class BulkGetFuture<T>
   private OperationStatus status;
   private boolean cancelled = false;
   private boolean timeout = false;
+  private List<TimeoutListener> timeoutListeners;
 
   public BulkGetFuture(Map<String, Future<T>> m, Collection<Operation> getOps,
       CountDownLatch l, ExecutorService service) {
@@ -104,6 +107,13 @@ public class BulkGetFuture<T>
     Map<String, T> ret = internalGet(to, unit, timedoutOps);
     if (timedoutOps.size() > 0) {
       timeout = true;
+      for (TimeoutListener timeoutListener : timeoutListeners) {
+        try {
+          timeoutListener.onTimeout(this);
+        } catch (Exception e) {
+          LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
+        }
+      }
       LoggerFactory.getLogger(getClass()).warn(
           new CheckedOperationTimeoutException("Operation timed out: ",
               timedoutOps).getMessage());
@@ -124,6 +134,13 @@ public class BulkGetFuture<T>
     Map<String, T> ret = internalGet(to, unit, timedoutOps);
     if (timedoutOps.size() > 0) {
       this.timeout = true;
+      for (TimeoutListener timeoutListener : timeoutListeners) {
+        try {
+          timeoutListener.onTimeout(this);
+        } catch (Exception e) {
+          LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
+        }
+      }
       throw new CheckedOperationTimeoutException("Operation timed out.",
           timedoutOps);
     }
@@ -225,4 +242,7 @@ public class BulkGetFuture<T>
     notifyListeners();
   }
 
+  public void setTimeoutListeners(List<TimeoutListener> timeoutListeners) {
+    this.timeoutListeners = timeoutListeners;
+  }
 }
