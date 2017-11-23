@@ -23,6 +23,9 @@
 
 package net.spy.memcached.internal;
 
+import static net.spy.memcached.TimeoutListener.Method.getBulk;
+import static net.spy.memcached.TimeoutListener.Method.getBulkSome;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,6 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.TimeoutListener;
+import net.spy.memcached.TimeoutListener.Method;
 import net.spy.memcached.compat.log.LoggerFactory;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
@@ -109,7 +113,7 @@ public class BulkGetFuture<T>
       timeout = true;
       for (TimeoutListener timeoutListener : timeoutListeners) {
         try {
-          timeoutListener.onTimeout(this);
+          timeoutListener.onTimeout(getBulkSome, this);
         } catch (Exception e) {
           LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
         }
@@ -136,7 +140,7 @@ public class BulkGetFuture<T>
       this.timeout = true;
       for (TimeoutListener timeoutListener : timeoutListeners) {
         try {
-          timeoutListener.onTimeout(this);
+          timeoutListener.onTimeout(getBulk, this);
         } catch (Exception e) {
           LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
         }
@@ -242,7 +246,8 @@ public class BulkGetFuture<T>
     notifyListeners();
   }
 
-  public void setTimeoutListeners(List<TimeoutListener> timeoutListeners) {
+  @Override
+  public void setTimeoutListeners(Method method, List<TimeoutListener> timeoutListeners) {
     this.timeoutListeners = timeoutListeners;
   }
 }

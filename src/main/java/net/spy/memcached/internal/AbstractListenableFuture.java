@@ -24,6 +24,7 @@
 package net.spy.memcached.internal;
 
 import net.spy.memcached.TimeoutListener;
+import net.spy.memcached.TimeoutListener.Method;
 import net.spy.memcached.compat.SpyObject;
 
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public abstract class AbstractListenableFuture
     listeners = new ArrayList<GenericCompletionListener<? extends Future<T>>>();
   }
 
-  public abstract void setTimeoutListeners(List<TimeoutListener> timeoutListeners);
+  public abstract void setTimeoutListeners(Method method, List<TimeoutListener> timeoutListeners);
 
   /**
    * Returns the current executor.

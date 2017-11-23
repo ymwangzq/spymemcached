@@ -23,35 +23,13 @@
 
 package net.spy.memcached;
 
-import net.spy.memcached.auth.AuthDescriptor;
-import net.spy.memcached.auth.AuthThreadMonitor;
-import net.spy.memcached.compat.SpyObject;
-import net.spy.memcached.internal.BulkFuture;
-import net.spy.memcached.internal.BulkGetFuture;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.internal.OperationFuture;
-import net.spy.memcached.internal.SingleElementInfiniteIterator;
-import net.spy.memcached.ops.CASOperationStatus;
-import net.spy.memcached.ops.CancelledOperationStatus;
-import net.spy.memcached.ops.ConcatenationType;
-import net.spy.memcached.ops.DeleteOperation;
-import net.spy.memcached.ops.GetAndTouchOperation;
-import net.spy.memcached.ops.GetOperation;
-import net.spy.memcached.ops.GetsOperation;
-import net.spy.memcached.ops.Mutator;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationCallback;
-import net.spy.memcached.ops.OperationState;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.ops.StatsOperation;
-import net.spy.memcached.ops.StatusCode;
-import net.spy.memcached.ops.StoreOperation;
-import net.spy.memcached.ops.StoreType;
-import net.spy.memcached.ops.TimedOutOperationStatus;
-import net.spy.memcached.protocol.binary.BinaryOperationFactory;
-import net.spy.memcached.transcoders.TranscodeService;
-import net.spy.memcached.transcoders.Transcoder;
-import net.spy.memcached.util.StringUtils;
+import static net.spy.memcached.TimeoutListener.Method.cas;
+import static net.spy.memcached.TimeoutListener.Method.delete;
+import static net.spy.memcached.TimeoutListener.Method.from;
+import static net.spy.memcached.TimeoutListener.Method.getAndTouch;
+import static net.spy.memcached.TimeoutListener.Method.getBulkSome;
+import static net.spy.memcached.TimeoutListener.Method.gets;
+import static net.spy.memcached.TimeoutListener.Method.touch;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -78,6 +56,37 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import net.spy.memcached.auth.AuthDescriptor;
+import net.spy.memcached.auth.AuthThreadMonitor;
+import net.spy.memcached.compat.SpyObject;
+import net.spy.memcached.compat.log.LoggerFactory;
+import net.spy.memcached.internal.BulkFuture;
+import net.spy.memcached.internal.BulkGetFuture;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.internal.SingleElementInfiniteIterator;
+import net.spy.memcached.ops.CASOperationStatus;
+import net.spy.memcached.ops.CancelledOperationStatus;
+import net.spy.memcached.ops.ConcatenationType;
+import net.spy.memcached.ops.DeleteOperation;
+import net.spy.memcached.ops.GetAndTouchOperation;
+import net.spy.memcached.ops.GetOperation;
+import net.spy.memcached.ops.GetsOperation;
+import net.spy.memcached.ops.Mutator;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
+import net.spy.memcached.ops.OperationState;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatsOperation;
+import net.spy.memcached.ops.StatusCode;
+import net.spy.memcached.ops.StoreOperation;
+import net.spy.memcached.ops.StoreType;
+import net.spy.memcached.ops.TimedOutOperationStatus;
+import net.spy.memcached.protocol.binary.BinaryOperationFactory;
+import net.spy.memcached.transcoders.TranscodeService;
+import net.spy.memcached.transcoders.Transcoder;
+import net.spy.memcached.util.StringUtils;
 
 /**
  * Client to a memcached server.
@@ -325,7 +334,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
               rv.signalComplete();
             }
           });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(from(storeType), timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -355,7 +364,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
             rv.signalComplete();
           }
         });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(from(catType), timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -408,7 +417,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(touch, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -654,7 +663,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
               rv.signalComplete();
             }
           });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(cas, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1046,7 +1055,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(null, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1106,7 +1115,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
         rv.signalComplete();
       }
     });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(gets, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1366,7 +1375,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       ops.add(op);
     }
     assert mops.size() == chunks.size();
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(null, timeoutListeners);
     mconn.checkState();
     mconn.addOperations(mops);
     return rv;
@@ -1539,7 +1548,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
                     tc.getMaxSize())));
           }
         });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(getAndTouch, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;
@@ -1777,6 +1786,13 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       }));
     try {
       if (!latch.await(operationTimeout, TimeUnit.MILLISECONDS)) {
+        for (TimeoutListener timeoutListener : timeoutListeners) {
+          try {
+            timeoutListener.onTimeout(from(m), null);
+          } catch (Exception e) {
+            LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
+          }
+        }
         throw new OperationTimeoutException("Mutate operation timed out,"
             + "unable to modify counter [" + key + ']');
       }
@@ -2011,7 +2027,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
             rv.signalComplete();
           }
         });
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(from(m), timeoutListeners);
     mconn.enqueueOperation(key, op);
     rv.setOperation(op);
     return rv;
@@ -2346,7 +2362,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       op = opFact.delete(key, cas, callback);
     }
 
-    rv.setTimeoutListeners(timeoutListeners);
+    rv.setTimeoutListeners(delete, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
     return rv;

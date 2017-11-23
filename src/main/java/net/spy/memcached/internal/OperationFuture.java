@@ -23,7 +23,6 @@
 
 package net.spy.memcached.internal;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
@@ -36,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.TimeoutListener;
+import net.spy.memcached.TimeoutListener.Method;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.ops.OperationStatus;
@@ -64,6 +64,7 @@ public class OperationFuture<T>
   private final long timeout;
   private Operation op;
   private final String key;
+  private Method method;
   private List<TimeoutListener> timeoutListeners;
   private Long cas;
 
@@ -104,7 +105,8 @@ public class OperationFuture<T>
   }
 
   @Override
-  public void setTimeoutListeners(List<TimeoutListener> timeoutListeners) {
+  public void setTimeoutListeners(Method method, List<TimeoutListener> timeoutListeners) {
+    this.method = method;
     this.timeoutListeners = timeoutListeners;
   }
 
@@ -175,7 +177,7 @@ public class OperationFuture<T>
       }
       for (TimeoutListener listener : timeoutListeners) {
         try {
-          listener.onTimeout(this);
+          listener.onTimeout(method, this);
         } catch (Exception e) {
           getLogger().error("Error execute timeout listeners", e);
         }
