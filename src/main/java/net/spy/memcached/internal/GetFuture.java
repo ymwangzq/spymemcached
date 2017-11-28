@@ -75,6 +75,10 @@ public class GetFuture<T>
     return v == null ? null : v.get();
   }
 
+  public Operation getOperation() {
+    return rv.getOperation();
+  }
+
   public OperationStatus getStatus() {
     return rv.getStatus();
   }

@@ -248,6 +248,11 @@ public class OperationFuture<T>
     }
     return cas;
   }
+
+  public Operation getOperation() {
+    return op;
+  }
+
   /**
    * Get the current status of this operation.
    *

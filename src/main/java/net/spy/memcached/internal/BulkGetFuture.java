@@ -23,6 +23,7 @@
 
 package net.spy.memcached.internal;
 
+import static java.util.Collections.unmodifiableCollection;
 import static net.spy.memcached.TimeoutListener.Method.getBulk;
 import static net.spy.memcached.TimeoutListener.Method.getBulkSome;
 
@@ -202,6 +203,10 @@ public class BulkGetFuture<T>
       }
     }
     return status;
+  }
+
+  public Collection<Operation> getOperations() {
+    return unmodifiableCollection(ops);
   }
 
   public void setStatus(OperationStatus s) {
