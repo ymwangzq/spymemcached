@@ -66,6 +66,7 @@ public class BulkGetFuture<T>
   private OperationStatus status;
   private boolean cancelled = false;
   private boolean timeout = false;
+  private Collection<Operation> timeoutOps;
   private List<TimeoutListener> timeoutListeners;
 
   public BulkGetFuture(Map<String, Future<T>> m, Collection<Operation> getOps,
@@ -112,6 +113,7 @@ public class BulkGetFuture<T>
     Map<String, T> ret = internalGet(to, unit, timedoutOps);
     if (timedoutOps.size() > 0) {
       timeout = true;
+      this.timeoutOps = timedoutOps;
       for (TimeoutListener timeoutListener : timeoutListeners) {
         try {
           timeoutListener.onTimeout(getBulkSome, this);
@@ -139,6 +141,7 @@ public class BulkGetFuture<T>
     Map<String, T> ret = internalGet(to, unit, timedoutOps);
     if (timedoutOps.size() > 0) {
       this.timeout = true;
+      this.timeoutOps = timedoutOps;
       for (TimeoutListener timeoutListener : timeoutListeners) {
         try {
           timeoutListener.onTimeout(getBulk, this);
@@ -254,5 +257,9 @@ public class BulkGetFuture<T>
   @Override
   public void setTimeoutListeners(Method method, List<TimeoutListener> timeoutListeners) {
     this.timeoutListeners = timeoutListeners;
+  }
+
+  public Collection<Operation> getTimeoutOps() {
+    return timeoutOps;
   }
 }
