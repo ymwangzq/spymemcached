@@ -294,7 +294,7 @@ public class DefaultConnectionFactory extends SpyObject implements
       ThreadFactory threadFactory = new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-          return new Thread(r, "FutureNotifyListener[" + getName() + "]");
+          return new Thread(r, "FutureNotifyListener[" + DefaultConnectionFactory.this.getName() + "]");
         }
       };
 
