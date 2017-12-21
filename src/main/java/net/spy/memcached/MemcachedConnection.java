@@ -302,7 +302,9 @@ public class MemcachedConnection extends SpyThread {
 
     registerMetrics();
 
-    setName("Memcached IO over [" + getName() +"] " + this);
+    String name = f instanceof DefaultConnectionFactory ? ((DefaultConnectionFactory) f)
+            .getName() : getName();
+    setName("Memcached IO over [" + name + "] " + this);
     setDaemon(f.isDaemon());
     start();
   }
