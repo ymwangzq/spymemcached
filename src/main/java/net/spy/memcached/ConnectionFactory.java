@@ -201,4 +201,6 @@ public interface ConnectionFactory {
    * @return the time in milliseconds.
    */
   long getAuthWaitTime();
+
+  int getSoTimeout();
 }

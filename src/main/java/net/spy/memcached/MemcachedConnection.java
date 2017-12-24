@@ -355,6 +355,7 @@ public class MemcachedConnection extends SpyThread {
       Socket socket = ch.socket();
       socket.setTcpNoDelay(!connectionFactory.useNagleAlgorithm());
       socket.setKeepAlive(connectionFactory.getKeepAlive());
+      socket.setSoTimeout(connectionFactory.getSoTimeout());
       
       try {
         if (ch.connect(sa)) {

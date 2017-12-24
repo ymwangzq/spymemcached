@@ -68,6 +68,8 @@ import net.spy.memcached.transcoders.Transcoder;
 public class DefaultConnectionFactory extends SpyObject implements
     ConnectionFactory {
 
+  public static final int DEFAULT_SO_TIMEOUT = 10000;
+
   /**
    * Default failure mode.
    */
@@ -276,6 +278,11 @@ public class DefaultConnectionFactory extends SpyObject implements
   @Override
   public long getAuthWaitTime() {
     return DEFAULT_AUTH_WAIT_TIME;
+  }
+
+  @Override
+  public int getSoTimeout() {
+    return DEFAULT_SO_TIMEOUT;
   }
 
   /**
