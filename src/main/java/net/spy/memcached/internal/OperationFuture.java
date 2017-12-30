@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -77,8 +78,7 @@ public class OperationFuture<T>
    * @param l the latch to be used counting down the OperationFuture
    * @param opTimeout the timeout within which the operation needs to be done
    */
-  public OperationFuture(String k, CountDownLatch l, long opTimeout,
-    ExecutorService service) {
+  public OperationFuture(String k, CountDownLatch l, long opTimeout, Executor service) {
     this(k, l, new AtomicReference<T>(null), opTimeout, service);
   }
 
@@ -93,7 +93,7 @@ public class OperationFuture<T>
    * @param opTimeout the timeout within which the operation needs to be done
    */
   public OperationFuture(String k, CountDownLatch l, AtomicReference<T> oref,
-      long opTimeout, ExecutorService service) {
+      long opTimeout, Executor service) {
     super(service);
 
     latch = l;

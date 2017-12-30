@@ -29,7 +29,7 @@ import static net.spy.memcached.TimeoutListener.Method.get;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -53,7 +53,7 @@ public class GetFuture<T>
   private final OperationFuture<Future<T>> rv;
 
   public GetFuture(CountDownLatch l, long opTimeout, String key,
-    ExecutorService service) {
+    Executor service) {
     super(service);
     this.rv = new OperationFuture<Future<T>>(key, l, opTimeout, service);
   }

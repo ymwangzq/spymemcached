@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -70,7 +70,7 @@ public class BulkGetFuture<T>
   private List<TimeoutListener> timeoutListeners;
 
   public BulkGetFuture(Map<String, Future<T>> m, Collection<Operation> getOps,
-      CountDownLatch l, ExecutorService service) {
+      CountDownLatch l, Executor service) {
     super(service);
     rvMap = m;
     ops = getOps;
