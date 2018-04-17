@@ -325,7 +325,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<Boolean> rv =
       new OperationFuture<Boolean>(key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.store(storeType, key, co.getFlags(), exp,
         co.getData(), new StoreOperation.Callback() {
@@ -347,6 +346,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -383,7 +383,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<Boolean> rv = new OperationFuture<Boolean>(key,
         latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.cat(catType, cas, key, co.getData(),
         new OperationCallback() {
@@ -401,6 +400,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -439,7 +439,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<Boolean> rv =
       new OperationFuture<Boolean>(key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.touch(key, exp, new OperationCallback() {
       @Override
@@ -456,6 +455,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -676,7 +676,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<CASResponse> rv =
       new OperationFuture<CASResponse>(key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.cas(StoreType.set, key, casId, co.getFlags(), exp,
         co.getData(), new StoreOperation.Callback() {
@@ -705,6 +704,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -1073,14 +1073,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final Map<AsyncOpListener<Object>, Object> before = before(get);
     final CountDownLatch latch = new CountDownLatch(1);
     final GetFuture<T> rv = new GetFuture<T>(latch, operationTimeout, key, executor);
-    rv.addListener(new GetCompletionListener() {
-
-      public void onComplete(GetFuture<?> future) {
-        for (Entry<AsyncOpListener<Object>, Object> entry : before.entrySet()) {
-          entry.getKey().onGetCompletion(entry.getValue(), future);
-        }
-      }
-    });
     Operation op = opFact.get(key, new GetOperation.Callback() {
       private Future<T> val;
 
@@ -1105,6 +1097,14 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(get, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    rv.addListener(new GetCompletionListener() {
+
+      public void onComplete(GetFuture<?> future) {
+        for (Entry<AsyncOpListener<Object>, Object> entry : before.entrySet()) {
+          entry.getKey().onGetCompletion(entry.getValue(), future);
+        }
+      }
+    });
     return rv;
   }
 
@@ -1140,7 +1140,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<CASValue<T>> rv =
       new OperationFuture<CASValue<T>>(key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.gets(key, new GetsOperation.Callback() {
       private CASValue<T> val;
@@ -1167,6 +1166,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -1387,14 +1387,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(initialLatchCount);
     final Collection<Operation> ops = new ArrayList<Operation>(chunks.size());
     final BulkGetFuture<T> rv = new BulkGetFuture<T>(m, ops, latch, executor);
-    rv.addListener(new BulkGetCompletionListener() {
-
-      public void onComplete(BulkGetFuture<?> future) {
-        for (Entry<AsyncOpListener<Object>, Object> entry : before.entrySet()) {
-          entry.getKey().onBulkGetCompletion(entry.getValue(), future);
-        }
-      }
-    });
 
     GetOperation.Callback cb = new GetOperation.Callback() {
       @Override
@@ -1436,6 +1428,14 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(null, timeoutListeners);
     mconn.checkState();
     mconn.addOperations(mops);
+    rv.addListener(new BulkGetCompletionListener() {
+
+      public void onComplete(BulkGetFuture<?> future) {
+        for (Entry<AsyncOpListener<Object>, Object> entry : before.entrySet()) {
+          entry.getKey().onBulkGetCompletion(entry.getValue(), future);
+        }
+      }
+    });
     return rv;
   }
 
@@ -1584,7 +1584,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<CASValue<T>> rv = new OperationFuture<CASValue<T>>(
         key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.getAndTouch(key, exp,
         new GetAndTouchOperation.Callback() {
@@ -1612,6 +1611,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -2077,7 +2077,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<Long> rv =
         new OperationFuture<Long>(key, latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     Operation op = opFact.mutate(m, key, by, def, exp,
         new OperationCallback() {
@@ -2093,8 +2092,9 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
           }
         });
     rv.setTimeoutListeners(method, timeoutListeners);
-    mconn.enqueueOperation(key, op);
     rv.setOperation(op);
+    mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
@@ -2403,7 +2403,6 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     final CountDownLatch latch = new CountDownLatch(1);
     final OperationFuture<Boolean> rv = new OperationFuture<Boolean>(key,
         latch, operationTimeout, executor);
-    addOpAsyncListener(method, before, rv);
 
     DeleteOperation.Callback callback = new DeleteOperation.Callback() {
       @Override
@@ -2433,6 +2432,7 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     rv.setTimeoutListeners(method, timeoutListeners);
     rv.setOperation(op);
     mconn.enqueueOperation(key, op);
+    addOpAsyncListener(method, before, rv);
     return rv;
   }
 
