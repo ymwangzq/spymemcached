@@ -120,6 +120,6 @@ public class GetFuture<T>
 
   @Override
   public void setTimeoutListeners(Method method, List<TimeoutListener> timeoutListeners) {
-    rv.setTimeoutListeners(get, timeoutListeners);
+    rv.setTimeoutListeners(method, timeoutListeners);
   }
 }
