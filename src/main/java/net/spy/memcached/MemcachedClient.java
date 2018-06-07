@@ -23,11 +23,12 @@
 
 package net.spy.memcached;
 
-import static net.spy.memcached.TimeoutListener.Method.*;
-import static net.spy.memcached.TimeoutListener.Method.delete;
+import static net.spy.memcached.TimeoutListener.Method.cas;
 import static net.spy.memcached.TimeoutListener.Method.from;
 import static net.spy.memcached.TimeoutListener.Method.get;
-import static net.spy.memcached.TimeoutListener.Method.getAndTouch;
+import static net.spy.memcached.TimeoutListener.Method.getBulk;
+import static net.spy.memcached.TimeoutListener.Method.gets;
+import static net.spy.memcached.TimeoutListener.Method.touch;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1386,7 +1387,9 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
     int initialLatchCount = chunks.isEmpty() ? 0 : 1;
     final CountDownLatch latch = new CountDownLatch(initialLatchCount);
     final Collection<Operation> ops = new ArrayList<Operation>(chunks.size());
-    final BulkGetFuture<T> rv = new BulkGetFuture<T>(m, ops, latch, executor);
+    final String name = connFactory instanceof DefaultConnectionFactory ? ((DefaultConnectionFactory) connFactory)
+            .getName() : null;
+    final BulkGetFuture<T> rv = new BulkGetFuture<T>(m, ops, latch, executor, name);
 
     GetOperation.Callback cb = new GetOperation.Callback() {
       @Override

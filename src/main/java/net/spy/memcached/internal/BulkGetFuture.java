@@ -63,6 +63,7 @@ public class BulkGetFuture<T>
   private final Map<String, Future<T>> rvMap;
   private final Collection<Operation> ops;
   private final CountDownLatch latch;
+  private final String name;
   private OperationStatus status;
   private boolean cancelled = false;
   private boolean timeout = false;
@@ -70,12 +71,13 @@ public class BulkGetFuture<T>
   private List<TimeoutListener> timeoutListeners;
 
   public BulkGetFuture(Map<String, Future<T>> m, Collection<Operation> getOps,
-      CountDownLatch l, Executor service) {
+      CountDownLatch l, Executor service, String name) {
     super(service);
     rvMap = m;
     ops = getOps;
     latch = l;
     status = null;
+    this.name = name;
   }
 
   public boolean cancel(boolean ign) {
@@ -122,7 +124,7 @@ public class BulkGetFuture<T>
         }
       }
       LoggerFactory.getLogger(getClass()).warn(
-          new CheckedOperationTimeoutException("Operation timed out: ",
+          new CheckedOperationTimeoutException("Operation timed out[" + name + "]: ",
               timedoutOps).getMessage());
     }
     return ret;
@@ -149,7 +151,7 @@ public class BulkGetFuture<T>
           LoggerFactory.getLogger(getClass()).error("fail to execute timeout listener:", e);
         }
       }
-      throw new CheckedOperationTimeoutException("Operation timed out.",
+      throw new CheckedOperationTimeoutException("Operation timed out[" + name + "].",
           timedoutOps);
     }
     return ret;
