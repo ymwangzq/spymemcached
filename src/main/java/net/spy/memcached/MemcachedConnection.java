@@ -23,27 +23,6 @@
 
 package net.spy.memcached;
 
-import net.spy.memcached.compat.SpyThread;
-import net.spy.memcached.compat.log.Logger;
-import net.spy.memcached.compat.log.LoggerFactory;
-import net.spy.memcached.internal.OperationFuture;
-import net.spy.memcached.metrics.MetricCollector;
-import net.spy.memcached.metrics.MetricType;
-import net.spy.memcached.ops.GetOperation;
-import net.spy.memcached.ops.KeyedOperation;
-import net.spy.memcached.ops.NoopOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationCallback;
-import net.spy.memcached.ops.OperationException;
-import net.spy.memcached.ops.OperationState;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.ops.TapOperation;
-import net.spy.memcached.ops.VBucketAware;
-import net.spy.memcached.protocol.binary.BinaryOperationFactory;
-import net.spy.memcached.protocol.binary.MultiGetOperationImpl;
-import net.spy.memcached.protocol.binary.TapAckOperationImpl;
-import net.spy.memcached.util.StringUtils;
-
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -73,6 +52,27 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
+import net.spy.memcached.compat.SpyThread;
+import net.spy.memcached.compat.log.Logger;
+import net.spy.memcached.compat.log.LoggerFactory;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.metrics.MetricCollector;
+import net.spy.memcached.metrics.MetricType;
+import net.spy.memcached.ops.GetOperation;
+import net.spy.memcached.ops.KeyedOperation;
+import net.spy.memcached.ops.NoopOperation;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
+import net.spy.memcached.ops.OperationException;
+import net.spy.memcached.ops.OperationState;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.TapOperation;
+import net.spy.memcached.ops.VBucketAware;
+import net.spy.memcached.protocol.binary.BinaryOperationFactory;
+import net.spy.memcached.protocol.binary.MultiGetOperationImpl;
+import net.spy.memcached.protocol.binary.TapAckOperationImpl;
+import net.spy.memcached.util.StringUtils;
 
 /**
  * Main class for handling connections to a memcached cluster.
@@ -1470,6 +1470,8 @@ public class MemcachedConnection extends SpyThread {
         logRunException(e);
       } catch (ConcurrentModificationException e) {
         logRunException(e);
+      } catch (OutOfMemoryError e) {
+        logRunException(e);
       }
     }
     getLogger().info("Shut down memcached client");
@@ -1483,7 +1485,7 @@ public class MemcachedConnection extends SpyThread {
    *
    * @param e the exception to log.
    */
-  private void logRunException(final Exception e) {
+  private void logRunException(final Throwable e) {
     if (shutDown) {
       getLogger().debug("Exception occurred during shutdown", e);
     } else {
